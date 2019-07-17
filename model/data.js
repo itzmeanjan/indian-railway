@@ -80,6 +80,90 @@ class Path {
     }
   }
 
+  // will get us distance from Source to Destination Station, in KiloMeter(s)
+
+  get totalDistance() {
+    let response = null;
+    try {
+      response = this.stops[this.stops.length - 1].distanceFromSource;
+    }
+    catch (e) {
+      response = null;
+    }
+    finally {
+      return response;
+    }
+  }
+
+  // finds instance of a certain Station, where this train is supposed to stop
+  // if not present, returns null
+
+  findStopByStationId(id) {
+    let response = null;
+    try {
+      id = id.toUpperCase();
+      response = this.stops.filter((elem) => id === elem.station.code)[0];
+    }
+    catch (e) {
+      response = null;
+    }
+    finally {
+      return response;
+    }
+  }
+
+  // counts number of stops to be covered between two stations
+  // stations need to be ordered, otherwise null will be returned
+  // even if both of them are present in to be stopped station(s) list
+
+  hopCountInBetween(firstStationId, lastStationId) {
+    let response;
+    try {
+      firstStationId = firstStationId.toUpperCase();
+      lastStationId = lastStationId.toUpperCase();
+      if (firstStationId === lastStationId) throw Error('both station id can\'t be same');
+      response = this.stops.reduce((acc, cur) => {
+        if (cur.station.code === firstStationId)
+          acc.push(cur.station.code);
+        else
+          if (cur.station.code === lastStationId)
+            acc.push(cur.station.code);
+          else
+            if (acc.includes(firstStationId) && !acc.includes(lastStationId))
+              acc.push(cur.station.code);
+        return acc;
+      }, []);
+      if (response[0] === firstStationId && response[response.length - 1] === lastStationId)
+        response = response.length - 2;
+      else
+        response = null;
+    }
+    catch (e) {
+      response = null;
+    }
+    finally {
+      return response;
+    }
+  }
+
+  averageSpeedBetween(firstStationId, lastStationId) {
+    let response;
+    try {
+      let firstStation = this.findStopByStationId(firstStationId);
+      let lastStation = this.findStopByStationId(lastStationId);
+      console.log(firstStation);
+      console.log(lastStation);
+    } catch (e) {
+      response = null;
+    }
+    finally {
+      return response;
+    }
+  }
+
+  // takes an JS Array or Arrays, and convert those data set into a collection of PathStop object,
+  // where each of them is a Station on that Trains path towards destination
+
   static fromDataSet(data) {
     let path = new Path([]);
     path.stops = data.map((elem) => PathStop.fromDataSet(elem));
@@ -126,6 +210,8 @@ class TrainList {
 
   // returns # of running trains, which are objectified, and can be accessed
   // using this object
+  //
+  // includes both UP and DOWN of a certain Train
 
   get runningTrainCount() {
     let response = 0;
@@ -137,6 +223,19 @@ class TrainList {
       return response;
     }
   };
+
+  // finds a certain running train by its Train No, which is denoted as Train
+  // Id. here returns a Promise
+
+  findById(id) {
+    return new Promise((resolve, reject) => {
+      try {
+        resolve(this.allTrains.filter((elem) => id === elem.id)[0]);
+      } catch (e) {
+        reject('error');
+      }
+    });
+  }
 
   // parameter `data` will be a JS Object
 
