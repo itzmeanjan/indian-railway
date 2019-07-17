@@ -86,11 +86,9 @@ class Path {
     let response = null;
     try {
       response = this.stops[this.stops.length - 1].distanceFromSource;
-    }
-    catch (e) {
+    } catch (e) {
       response = null;
-    }
-    finally {
+    } finally {
       return response;
     }
   }
@@ -103,11 +101,44 @@ class Path {
     try {
       id = id.toUpperCase();
       response = this.stops.filter((elem) => id === elem.station.code)[0];
-    }
-    catch (e) {
+    } catch (e) {
       response = null;
+    } finally {
+      return response;
     }
-    finally {
+  }
+
+  // finds stations in between starting and end station id,
+  // including both of them
+  //
+  // will be helpful in calculating timespent for moving
+  // from one station to another
+  // or for finding average speed on track for a certain train between stations
+  // provided
+
+  hopsInBetween(firstStationId, lastStationId) {
+    let response;
+    try {
+      firstStationId = firstStationId.toUpperCase();
+      lastStationId = lastStationId.toUpperCase();
+      if (firstStationId === lastStationId)
+        throw Error('both station id can\'t be same');
+      response = this.stops.reduce((acc, cur) => {
+        if (cur.station.code === firstStationId)
+          acc.push(cur);
+        else if (cur.station.code === lastStationId)
+          acc.push(cur);
+        else if (acc.some((elem) => elem.station.code === firstStationId) &&
+                 !acc.some((elem) => elem.station.code === lastStationId))
+          acc.push(cur);
+        return acc;
+      }, []);
+      if (!(response[0].station.code === firstStationId &&
+            response[response.length - 1].station.code === lastStationId))
+        response = null;
+    } catch (e) {
+      response = null;
+    } finally {
       return response;
     }
   }
@@ -117,52 +148,36 @@ class Path {
   // even if both of them are present in to be stopped station(s) list
 
   hopCountInBetween(firstStationId, lastStationId) {
-    let response;
-    try {
-      firstStationId = firstStationId.toUpperCase();
-      lastStationId = lastStationId.toUpperCase();
-      if (firstStationId === lastStationId) throw Error('both station id can\'t be same');
-      response = this.stops.reduce((acc, cur) => {
-        if (cur.station.code === firstStationId)
-          acc.push(cur.station.code);
-        else
-          if (cur.station.code === lastStationId)
-            acc.push(cur.station.code);
-          else
-            if (acc.includes(firstStationId) && !acc.includes(lastStationId))
-              acc.push(cur.station.code);
-        return acc;
-      }, []);
-      if (response[0] === firstStationId && response[response.length - 1] === lastStationId)
-        response = response.length - 2;
-      else
-        response = null;
-    }
-    catch (e) {
-      response = null;
-    }
-    finally {
-      return response;
-    }
+    let tmp = this.hopsInBetween(firstStationId, lastStationId);
+    return (tmp !== undefined && tmp !== null) ? tmp.length - 2 : null;
   }
+
+  // implementation not yet completed
 
   averageSpeedBetween(firstStationId, lastStationId) {
-    let response;
-    try {
-      let firstStation = this.findStopByStationId(firstStationId);
-      let lastStation = this.findStopByStationId(lastStationId);
-      console.log(firstStation);
-      console.log(lastStation);
-    } catch (e) {
-      response = null;
-    }
-    finally {
-      return response;
-    }
+    let tmp = this.hopsInBetween(firstStationId, lastStationId);
+    return (tmp !== undefined && tmp !== null)
+               ? (tmp.reduce(
+                      (acc, cur, idx, whole) =>
+                          (acc += ((idx >= 0 && idx < (tmp.length - 1))
+                                       ? (whole[idx + 1].distanceFromSource -
+                                          cur.distanceFromSource)
+                                       : 0)),
+                      0) /
+                  tmp.reduce((acc, cur, idx, whole) =>
+                                 (acc += ((idx >= 0 && idx < (tmp.length - 1))
+                                              ? require('./time').getDifference(
+                                                    cur.time.departure,
+                                                    whole[idx + 1].time.arrival)
+                                              : 0)),
+                             0)) *
+                     3600
+               : null;
   }
 
-  // takes an JS Array or Arrays, and convert those data set into a collection of PathStop object,
-  // where each of them is a Station on that Trains path towards destination
+  // takes an JS Array or Arrays, and convert those data set into a collection
+  // of PathStop object, where each of them is a Station on that Trains path
+  // towards destination
 
   static fromDataSet(data) {
     let path = new Path([]);
@@ -242,7 +257,7 @@ class TrainList {
   static fromDataSet(data) {
     let trainList = new TrainList([]);
     trainList.allTrains =
-      Object.values(data).map((elem) => Train.fromDataSet(elem));
+        Object.values(data).map((elem) => Train.fromDataSet(elem));
     return trainList;
   }
 }
