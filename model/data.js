@@ -24,6 +24,13 @@ class PathStopTime {
     this.arrival = arrival;
     this.departure = departure;
   }
+
+  // this one gives time spent in a certain station,
+  // will be always in `Second(s)`
+
+  get duration() {
+    return require('./time').getDifference(this.arrival, this.departure);
+  }
 }
 
 // a certain PathStop denotes a stop, present in running path, that a train
@@ -136,7 +143,7 @@ class TrainList {
   static fromDataSet(data) {
     let trainList = new TrainList([]);
     trainList.allTrains =
-        Object.values(data).map((elem) => Train.fromDataSet(elem));
+      Object.values(data).map((elem) => Train.fromDataSet(elem));
     return trainList;
   }
 }
