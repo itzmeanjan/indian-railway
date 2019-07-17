@@ -152,7 +152,14 @@ class Path {
     return (tmp !== undefined && tmp !== null) ? tmp.length - 2 : null;
   }
 
-  // implementation not yet completed
+  // calculates average speed of traversal in between two stations
+  // while eliminating Time spent in any intermediate Station(s)
+  //
+  // only runtime and distance between stationOne
+  // and stationTwo will be considered
+  //
+  // returned average speed will be in KiloMeter(s)/ Hour
+  // in case of error, returns `null`
 
   averageSpeedBetween(firstStationId, lastStationId) {
     let tmp = this.hopsInBetween(firstStationId, lastStationId);

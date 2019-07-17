@@ -67,7 +67,7 @@ readIt().then(
           .fromDataSet(value)
           .findById('12345')
           .then((elem) =>
-                    console.log(elem.path.averageSpeedBetween('hwh', 'bhp')),
+                    console.log(elem.path.averageSpeedBetween('hwh', 'bwn')),
                 (err) => console.log(err));
     },
     (err) => { console.log(err); });
