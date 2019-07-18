@@ -8,6 +8,8 @@ class Station {
     this.code = code;
     this.name = name;
   }
+
+  toJSON() { return {code : this.code, name : this.name}; }
 }
 
 // keeps track of time spent in a station during a stop
@@ -31,6 +33,14 @@ class PathStopTime {
   get duration() {
     return require('./time').getDifference(this.arrival, this.departure);
   }
+
+  toJSON() {
+    return {
+      arrival : this.arrival,
+      departure : this.departure,
+      duration : this.duration // this one will be in `Second`
+    };
+  }
 }
 
 // a certain PathStop denotes a stop, present in running path, that a train
@@ -47,6 +57,14 @@ class PathStop {
     this.station = station;
     this.time = time;
     this.distanceFromSource = distanceFromSource;
+  }
+
+  toJSON() {
+    return {
+      station : this.station,
+      time : this.time,
+      distanceFromSource : this.distanceFromSource // stays in KiloMeter(s)
+    };
   }
 
   static fromDataSet(data) {
@@ -182,6 +200,8 @@ class Path {
                : null;
   }
 
+  toJSON() { return this.stops.map((elem) => elem.toJSON()); }
+
   // takes an JS Array or Arrays, and convert those data set into a collection
   // of PathStop object, where each of them is a Station on that Trains path
   // towards destination
@@ -204,6 +224,10 @@ class Train {
     this.source = source;
     this.destination = destination;
     this.path = path;
+  }
+
+  toJSON() {
+    return {id : this.id, name : this.name, path : this.path.toJSON()};
   }
 
   // parameter `data` will be a JS array of arrays,
@@ -244,7 +268,7 @@ class TrainList {
     } finally {
       return response;
     }
-  };
+  }
 
   // finds a certain running train by its Train No, which is denoted as Train
   // Id. here returns a Promise
@@ -258,6 +282,8 @@ class TrainList {
       }
     });
   }
+
+  toJSON() { return {allTrains : this.allTrains.map((elem) => elem.toJSON())}; }
 
   // parameter `data` will be a JS Object
 

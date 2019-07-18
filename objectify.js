@@ -1,5 +1,5 @@
 'use strict';
-const {readFile} = require('fs');
+const {readFile, writeFile} = require('fs');
 
 // reads target_file, containing actual dataset, and returns a
 // JS Object, where each value is a JS array of arrays and each inner array is
@@ -55,19 +55,39 @@ function readIt(target_file = './data/Train_details_22122017.csv') {
   });
 }
 
+// stores a customized dataset in JSON form to a target file
+// make sure data set passed for storing, is JSON stringified and
+// may also include `indentation`
+
+function storeJSON(dataSet, target_file = './data/train.json') {
+  return new Promise((resolve, reject) => {
+    try {
+      writeFile(target_file, dataSet,
+                (err) => (err !== undefined && err !== null)
+                             ? reject('error')
+                             : resolve('success'));
+    } catch (e) {
+      reject('error');
+    }
+  });
+}
+
 // making it available for use to external users
 
-// module.exports = readIt;
+module.exports = {
+  readIt : readIt,
+  storeJSON : storeJSON
+};
 
 // following section was used for testing purposes
 
+/*
 readIt().then(
     (value) => {
-      require('./model/data')
-          .fromDataSet(value)
-          .findById('12345')
-          .then((elem) =>
-                    console.log(elem.path.averageSpeedBetween('hwh', 'bwn')),
-                (err) => console.log(err));
+      storeJSON(
+          JSON.stringify(require('./model/data').fromDataSet(value).toJSON(),
+                         null, 4))
+          .then((val) => console.log(val), (err) => console.log(err));
     },
     (err) => { console.log(err); });
+*/
