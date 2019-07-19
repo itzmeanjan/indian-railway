@@ -33,6 +33,13 @@ parseJSONDataSet().then((data) => console.log(data), (err) => console.log(err));
 // objectifies that into an instance of `TrainList` class
 // and iterates over a list of `Train`objects
 
+/*
 parseJSONDataSet().then((data) =>
                             data.allTrains.forEach((elem) => console.log(elem)),
                         (err) => console.log(err));
+*/
+
+parseJSONDataSet().then(
+    (data) => data.allStations.then((stations) => console.log(stations),
+                                    (err) => console.log(err)),
+    (err) => console.log(err));

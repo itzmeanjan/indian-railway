@@ -13,7 +13,7 @@ class Station {
   // it can be easily written into a certain data file as JSON string ( after
   // stringifying whole using JSON.stringify() )
 
-  toJSON() { return {code : this.code, name : this.name}; }
+  toJSON() { return { code: this.code, name: this.name }; }
 
   // forms an instance of `Station` class, from a JSON object
 
@@ -54,9 +54,9 @@ class PathStopTime {
 
   toJSON() {
     return {
-      arrival : this.arrival,
-      departure : this.departure,
-      duration : this.duration // this one will be in `Second`
+      arrival: this.arrival,
+      departure: this.departure,
+      duration: this.duration // this one will be in `Second`
     };
   }
 
@@ -92,9 +92,9 @@ class PathStop {
 
   toJSON() {
     return {
-      station : this.station,
-      time : this.time,
-      distanceFromSource : this.distanceFromSource // stays in KiloMeter(s)
+      station: this.station,
+      time: this.time,
+      distanceFromSource: this.distanceFromSource // stays in KiloMeter(s)
     };
   }
 
@@ -203,12 +203,12 @@ class Path {
         else if (cur.station.code === lastStationId)
           acc.push(cur);
         else if (acc.some((elem) => elem.station.code === firstStationId) &&
-                 !acc.some((elem) => elem.station.code === lastStationId))
+          !acc.some((elem) => elem.station.code === lastStationId))
           acc.push(cur);
         return acc;
       }, []);
       if (!(response[0].station.code === firstStationId &&
-            response[response.length - 1].station.code === lastStationId))
+        response[response.length - 1].station.code === lastStationId))
         response = null;
     } catch (e) {
       response = null;
@@ -238,22 +238,22 @@ class Path {
   averageSpeedBetween(firstStationId, lastStationId) {
     let tmp = this.hopsInBetween(firstStationId, lastStationId);
     return (tmp !== undefined && tmp !== null)
-               ? (tmp.reduce(
-                      (acc, cur, idx, whole) =>
-                          (acc += ((idx >= 0 && idx < (tmp.length - 1))
-                                       ? (whole[idx + 1].distanceFromSource -
-                                          cur.distanceFromSource)
-                                       : 0)),
-                      0) /
-                  tmp.reduce((acc, cur, idx, whole) =>
-                                 (acc += ((idx >= 0 && idx < (tmp.length - 1))
-                                              ? require('./time').getDifference(
-                                                    cur.time.departure,
-                                                    whole[idx + 1].time.arrival)
-                                              : 0)),
-                             0)) *
-                     3600
-               : null;
+      ? (tmp.reduce(
+        (acc, cur, idx, whole) =>
+          (acc += ((idx >= 0 && idx < (tmp.length - 1))
+            ? (whole[idx + 1].distanceFromSource -
+              cur.distanceFromSource)
+            : 0)),
+        0) /
+        tmp.reduce((acc, cur, idx, whole) =>
+          (acc += ((idx >= 0 && idx < (tmp.length - 1))
+            ? require('./time').getDifference(
+              cur.time.departure,
+              whole[idx + 1].time.arrival)
+            : 0)),
+          0)) *
+      3600
+      : null;
   }
 
   toJSON() { return this.stops.map((elem) => elem.toJSON()); }
@@ -304,7 +304,7 @@ class Train {
   // stations covered are sequentially placed from source to destination
 
   toJSON() {
-    return {id : this.id, name : this.name, path : this.path.toJSON()};
+    return { id: this.id, name: this.name, path: this.path.toJSON() };
   }
 
   // returns an object of `Train` class from JSON
@@ -316,7 +316,7 @@ class Train {
     train.name = jsonObject.name;
     train.source = Station.fromJSON(jsonObject.path[0].station);
     train.destination =
-        Station.fromJSON(jsonObject.path[jsonObject.path.length - 1].station);
+      Station.fromJSON(jsonObject.path[jsonObject.path.length - 1].station);
     train.path = Path.fromJSON(jsonObject.path);
     return train;
   }
@@ -361,6 +361,23 @@ class TrainList {
     }
   }
 
+  get allStations() {
+    return new Promise((resolve, reject) => {
+      try {
+        resolve(this.allTrains.reduce((acc, cur) => {
+          cur.path.stops.reduce((innerAcc, innerCur) => {
+            if (!(innerCur.station.code in innerAcc))
+              innerAcc[innerCur.station.code] = innerCur.station.name;
+            return innerAcc;
+          }, acc);
+          return acc;
+        }, {}));
+      } catch (e) {
+        reject('error');
+      }
+    });
+  }
+
   // finds a certain running train by its Train No, which is denoted as Train
   // Id. here returns a Promise
 
@@ -376,7 +393,7 @@ class TrainList {
 
   // converts to JSON object
 
-  toJSON() { return {allTrains : this.allTrains.map((elem) => elem.toJSON())}; }
+  toJSON() { return { allTrains: this.allTrains.map((elem) => elem.toJSON()) }; }
 
   // holds all instances of running trains under it
   // builds this instance from JSON object, which was eventually read from a
@@ -385,7 +402,7 @@ class TrainList {
   static fromJSON(jsonObject) {
     let trainList = new TrainList(null);
     trainList.allTrains =
-        jsonObject.allTrains.map((elem) => Train.fromJSON(elem));
+      jsonObject.allTrains.map((elem) => Train.fromJSON(elem));
     return trainList;
   }
 
@@ -394,7 +411,7 @@ class TrainList {
   static fromDataSet(data) {
     let trainList = new TrainList([]);
     trainList.allTrains =
-        Object.values(data).map((elem) => Train.fromDataSet(elem));
+      Object.values(data).map((elem) => Train.fromDataSet(elem));
     return trainList;
   }
 }

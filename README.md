@@ -221,7 +221,7 @@ parseJSONDataSet().then((data) =>
                             data.allTrains.forEach((elem) => console.log(elem)),
                         (err) => console.log(err));
 ```
-Well that not that much important :wink:
+Well that not that much interesting :wink:
 
 
 **_More to come ..._**
