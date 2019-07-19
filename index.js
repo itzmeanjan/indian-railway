@@ -3,6 +3,8 @@
 const {readIt, storeJSON, parseJSONDataSet} = require('./objectify');
 
 // following section is temporarily disabled, cause it's already executed
+// use following section for generation of JSON dataset from main CSV dataset
+// which was actually downloaded
 
 /*
 readIt().then((value) => {
@@ -19,4 +21,18 @@ readIt().then((value) => {
 }, (err) => console.log(err));          // if reading data fails some how
 */
 
+// this section will try to show how to objectify ( just converted ) JSON
+// dataset and get an instance of `TrainList` class, which will eventually hold
+// all running train information
+
+/*
 parseJSONDataSet().then((data) => console.log(data), (err) => console.log(err));
+*/
+
+// reads from already generated JSON dataset,
+// objectifies that into an instance of `TrainList` class
+// and iterates over a list of `Train`objects
+
+parseJSONDataSet().then((data) =>
+                            data.allTrains.forEach((elem) => console.log(elem)),
+                        (err) => console.log(err));

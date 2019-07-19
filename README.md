@@ -1,5 +1,5 @@
 # indian-railway
-A collection of utility Scripts, for manipulating Indian Railway's Running Train(s) Dataset, written with :heart:, using _JavaScript_
+A collection of utility Scripts, for manipulating Indian Railway's Running Train(s) Dataset, written with :heart:, using _JavaScript_ on _NodeJS_
 
 ## what does it do ?
 - Reads Indian Railway running train's _CSV_ [dataSet](/data/Train_details_22122017.csv)
@@ -14,6 +14,7 @@ A collection of utility Scripts, for manipulating Indian Railway's Running Train
 - Dataset was downloaded from [here](https://data.gov.in/catalog/indian-railways-train-time-table-0?filters%5Bfield_catalog_reference%5D=332021&format=json&offset=0&limit=6&sort%5Bcreated%5D=desc)
 
 ## how does it do ?
+### Parsing CSV Dataset & Objectifying it :
 - First thing to do, is reading dataset from _CSV_ file
 - Calling `readIt()` from `objectify.js` will result in returning an instance of `TrainList` class, via `Promise`
 - Now we've a handle, using which we can access all _running train details_
@@ -35,12 +36,12 @@ readIt().then((value) => {
             (err) => console.log(err)); // otherwise `error`
 }, (err) => console.log(err));          // if reading data fails some how
 ```
-### Generated Dataset :
+#### Generated Dataset :
 A small portion is extracted from `./data/train.json`, which holds _all train details_
 
 In `path`, first and last `PathStop` denotes source & destination stations respectively
 
-**Distance is in KiloMeters from Source Station**
+**Distance is in KiloMeters w.r.t. Source Station**
 ```json
 {
     "allTrains": [
@@ -155,7 +156,7 @@ In `path`, first and last `PathStop` denotes source & destination stations respe
     ]
 }
 ```
-### Performance :
+#### Performance :
 Result of running
 ```bash
 $ time node index.js
@@ -167,6 +168,60 @@ real	0m3.937s
 user	0m4.200s
 sys	0m0.486s
 ```
+### Parsing back to `TrainList` object from JSON Dataset : 
+- So we've already completed converting our _CSV_ dataset to a cleaner _JSON_ dataset. Now we may be interested in doing something opposite ...
+
+- **_How about converting from JSON to an instance of `TrainList` object ?_**
+
+- Well that can be done easily, and for doing so, I've added one static method `fromJSON()` for each data holder classes, present in `./model/data.js`, which will eventually help us in grabbing an instance of each of them from _JSON_ data, which is to be read from our already generated _JSON_ file ( `./data/train.json` ), using `./objectify.parseJSONDataSet()` method.
+
+```javascript
+parseJSONDataSet().then((data) => console.log(data), (err) => console.log(err));
+```
+#### Example Output ::
+```bash
+$ time node index.js # make sure you've commented out proper portion of `index.js` to avoid execution of unnecessary code
+```
+```bash
+TrainList {
+  allTrains:
+   [
+    ...
+     Train {
+       id: '5521',
+       name: 'JMP-SHC SPEC',
+       source: [Station],
+       destination: [Station],
+       path: [Path] },
+     Train {
+       id: '5522',
+       name: 'SHC-JMP SPEC',
+       source: [Station],
+       destination: [Station],
+       path: [Path] },
+     Train {
+       id: '5613',
+       name: 'JLWC-KOTA SP',
+       source: [Station],
+       destination: [Station],
+       path: [Path] },
+     ... 11012 more items ] }
+
+real	0m1.673s
+user	0m1.351s
+sys	0m0.466s
+```
+- So now we can read back from generated _JSON_ dataset and objectify it for easy manipulation of dataset.
+
+### Finding running Train Details :
+- You may have already learnt download _CSV_ dataset was actually holding a certain train's certain stopping station details in each line, and we've combined them together for getting record of each running Train _( along with its running path, stopping time at each of those intermediate stations and distance in between them )_
+- If you just want to get a list of all running Trains, then do as following one. Or you can help yourself in finding same code in `./index.js`
+```javascript
+parseJSONDataSet().then((data) =>
+                            data.allTrains.forEach((elem) => console.log(elem)),
+                        (err) => console.log(err));
+```
+Well that not that much important :wink:
 
 
 **_More to come ..._**
