@@ -72,11 +72,42 @@ function storeJSON(dataSet, target_file = './data/train.json') {
   });
 }
 
+// for first time processing, we read data from CSV file
+// after that we can easily convert that data holding `TrainList` object
+// into equivalent JS object and after stringifying so,
+// we can write that to target_file, which can be done using `storeJSON()`
+//
+// now if we're interested in reading from JSON data file and giving it
+// an object form, so that it can be used in a better fashion for finding deeper
+// pattern(s) that's is attained using this method, objectifies whole dataset
+// and puts it in memory so that working with it gets faster pace
+//
+// in case of success it returns an intance of `TrainList`,
+// which holds whole dataset otherwise returns error ( by the way it's via
+// Promise )
+
+function parseJSONDataSet(target_file = './data/train.json') {
+  return new Promise((resolve, reject) => {
+    try {
+      readFile(target_file,
+               (err, data) =>
+                   (err !== undefined && err !== null)
+                       ? reject('error')
+                       : resolve(require('./model/data')
+                                     .fromJSON(JSON.parse(data.toString()))));
+    } catch (e) {
+      reject('error');
+    }
+  });
+}
+
 // making it available for use to external users
 
 module.exports = {
-  readIt : readIt,
-  storeJSON : storeJSON
+  readIt : readIt, // for dealing with CSV
+  storeJSON : storeJSON,
+  parseJSONDataSet :
+      parseJSONDataSet // for dealing with processed CSV i.e. JSON
 };
 
 // following section was used for testing purposes

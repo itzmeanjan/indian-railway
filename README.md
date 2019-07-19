@@ -158,7 +158,7 @@ In `path`, first and last `PathStop` denotes source & destination stations respe
 ### Performance :
 Result of running
 ```bash
-$ node index.js
+$ time node index.js
 ```
 ```bash
 success
@@ -169,4 +169,4 @@ sys	0m0.486s
 ```
 
 
-**_Coming soon ..._**
+**_More to come ..._**

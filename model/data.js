@@ -9,7 +9,20 @@ class Station {
     this.name = name;
   }
 
+  // gets us a JSON representation of this object, so that
+  // it can be easily written into a certain data file as JSON string ( after
+  // stringifying whole using JSON.stringify() )
+
   toJSON() { return {code : this.code, name : this.name}; }
+
+  // forms an instance of `Station` class, from a JSON object
+
+  static fromJSON(jsonObject) {
+    let station = new Station(null, null);
+    station.code = jsonObject.code;
+    station.name = jsonObject.name;
+    return station;
+  }
 }
 
 // keeps track of time spent in a station during a stop
@@ -34,12 +47,26 @@ class PathStopTime {
     return require('./time').getDifference(this.arrival, this.departure);
   }
 
+  // for writing JSON string data to target file, for future usage
+  // we'll use it
+  //
+  // it holds `duration` too, which is calculated and kept in `Second(s)`
+
   toJSON() {
     return {
       arrival : this.arrival,
       departure : this.departure,
       duration : this.duration // this one will be in `Second`
     };
+  }
+
+  // builds an instance of `PathStopTime` class from JSON object
+
+  static fromJSON(jsonObject) {
+    let pathStopTime = new PathStopTime(null, null);
+    pathStopTime.arrival = jsonObject.arrival;
+    pathStopTime.departure = jsonObject.departure;
+    return pathStopTime;
   }
 }
 
@@ -59,6 +86,10 @@ class PathStop {
     this.distanceFromSource = distanceFromSource;
   }
 
+  // may be helpful in converting this object representation into JSON string
+  // which can be stored and reused for reloading dataset and getting object
+  // representation for sake of better data analysis
+
   toJSON() {
     return {
       station : this.station,
@@ -66,6 +97,31 @@ class PathStop {
       distanceFromSource : this.distanceFromSource // stays in KiloMeter(s)
     };
   }
+
+  // this static method will be helpful in grabbing
+  // an instance of this class from JSON dataset
+  //
+  // after we've loaded data from CSV and converted to JSON string,
+  // later on we may require to reload same data ( but this time JSON )
+  // then we'll use this method
+
+  static fromJSON(jsonObject) {
+    let pathStop = new PathStop(null, null, null);
+    pathStop.station = Station.fromJSON(jsonObject.station);
+    pathStop.time = PathStopTime.fromJSON(jsonObject.time);
+    pathStop.distanceFromSource = jsonObject.distanceFromSource;
+    return pathStop;
+  }
+
+  // each `PathStop` object present in `Path`, holds information
+  // regarding a certain stopping station, present on its path towards
+  // destination from source
+  //
+  // remember they stay in ordered fashion
+  // now each PathStop holds current station information ( like code and name ),
+  // stopping time ( like arrival and departure time, so we can calculate
+  // duration easily ) and distance for current station from source station ( no
+  // doubt it's w.r.t. current train )
 
   static fromDataSet(data) {
     let pathStop = new PathStop(null, null, null);
@@ -202,6 +258,15 @@ class Path {
 
   toJSON() { return this.stops.map((elem) => elem.toJSON()); }
 
+  // converts JSON object to `Path` object
+
+  static fromJSON(jsonObject) {
+    let path = new Path(null);
+    // using JS functional construct
+    path.stops = jsonObject.map((elem) => PathStop.fromJSON(elem));
+    return path;
+  }
+
   // takes an JS Array or Arrays, and convert those data set into a collection
   // of PathStop object, where each of them is a Station on that Trains path
   // towards destination
@@ -226,8 +291,34 @@ class Train {
     this.path = path;
   }
 
+  // helpful while writing JSON string representation
+  // of dataset into some target `*.json` file
+  //
+  // one thing to be noticed, when we convert `Train` to JSON we don't
+  // consider `source` and `destination`
+  //
+  // but while converting JSON to `Train` object we need to have both source and
+  // destination, which is why we'll take very first and last element of `path`
+  // as `source` and `destination` respectively
+  //
+  // stations covered are sequentially placed from source to destination
+
   toJSON() {
     return {id : this.id, name : this.name, path : this.path.toJSON()};
+  }
+
+  // returns an object of `Train` class from JSON
+  // ( actually parsed JSON string, i.e. JS object )
+
+  static fromJSON(jsonObject) {
+    let train = new Train(null, null, null, null, null);
+    train.id = jsonObject.id;
+    train.name = jsonObject.name;
+    train.source = Station.fromJSON(jsonObject.path[0].station);
+    train.destination =
+        Station.fromJSON(jsonObject.path[jsonObject.path.length - 1].station);
+    train.path = Path.fromJSON(jsonObject.path);
+    return train;
   }
 
   // parameter `data` will be a JS array of arrays,
@@ -283,7 +374,20 @@ class TrainList {
     });
   }
 
+  // converts to JSON object
+
   toJSON() { return {allTrains : this.allTrains.map((elem) => elem.toJSON())}; }
+
+  // holds all instances of running trains under it
+  // builds this instance from JSON object, which was eventually read from a
+  // JSON file
+
+  static fromJSON(jsonObject) {
+    let trainList = new TrainList(null);
+    trainList.allTrains =
+        jsonObject.allTrains.map((elem) => Train.fromJSON(elem));
+    return trainList;
+  }
 
   // parameter `data` will be a JS Object
 
