@@ -179,6 +179,4 @@ class Network {
 // where stations will be represented as Vertices and railway tracks will be
 // edges in between them
 
-module.exports = {
-  Network : Network
-}
+module.exports = Network;

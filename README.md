@@ -10,7 +10,11 @@ A collection of utility Scripts, for manipulating Indian Railway's Running Train
 - We also keep track of name of train, both its source & destination station & path it follows
 - This `Path` object is pretty interesting, using it we can find out list/ number of station(s) between two stations, distance between two stations, total running path distance, an intermediate station present on current path, average speed between two stations
 - A `Path` object holds a collection of `PathStop` objects, where each of them will be holding current station details ( i.e. Id & Name ), time spent there ( both arrival time & departure time ) & distance from source station
-- From `PathStopTime` object, we can easily calculate `duration` spent in a certain station, we'll calculate it in _Second_
+- From `PathStopTime` object, we can easily calculate `duration` spent in a certain station, we'll calculate it in _`Second`_
+- As soon as we'll be able to have an instance of `TrainList`, we can simply start exploring whole dataset, but we'll first try to convert that dataset to `JSON`, so that we can store it in a well formed format and load it up easily into memory _( in object form )_, for future usage
+- Now we can grab a mapping from Station Codes to Station Names
+- Grab a list of running trains, is also pretty easy, along with detailed train track information _( to be stopped stations )_, and time spent in each of intermediate station
+- What we'll be mostly interested in, is building a railway network as a weighted Graph, where nodes will be stations, edges will be railway track between adjacent stations and distance from this station to neighbouring station(s) will be denoted as edge weight(s), which is implemented in `./model/network`
 - Dataset was downloaded from [here](https://data.gov.in/catalog/indian-railways-train-time-table-0?filters%5Bfield_catalog_reference%5D=332021&format=json&offset=0&limit=6&sort%5Bcreated%5D=desc)
 
 ## how does it do ?

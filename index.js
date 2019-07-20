@@ -1,6 +1,6 @@
 'use strict';
 
-const {readIt, storeJSON, parseJSONDataSet} = require('./objectify');
+const { readIt, storeJSON, parseJSONDataSet } = require('./objectify');
 
 // following section is temporarily disabled, cause it's already executed
 // use following section for generation of JSON dataset from main CSV dataset
@@ -42,20 +42,20 @@ parseJSONDataSet().then((data) =>
 // prints all Stations present in Indian RailWay Network
 // ( more specificially saying, stations present in dataset downloaded )
 
-
+/*
 parseJSONDataSet().then(
     (data) => data.allStations.then((stations) => console.log(stations),
                                     (err) => console.log(err)),
     (err) => console.log(err));
-
+*/
 
 // builds railway networks Graph, where stations are vertices,
 // railway tracks are considered as edges and
 // distance from current station under consideration to adjacent station(s)
 // are put as edge weight(s)
 
-/*
+
 parseJSONDataSet().then((data) => {
-  console.log(require('./model/network').Network.fromTrainList(data));
+  console.log(require('./model/network').fromTrainList(data));
 }, (err) => console.log(err));
-*/
+
