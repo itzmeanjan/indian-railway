@@ -41,7 +41,7 @@ A small portion is extracted from `./data/train.json`, which holds _all train de
 
 In `path`, first and last `PathStop` denotes source & destination stations respectively
 
-**Distance is in KiloMeters w.r.t. Source Station**
+**Generated `./data/train.json` will not be intentionally included in this repo, because it's almost _`75M`_, so I'd like to request to first `Clone` this repo, and then follow previous steps to get to this point, so that you don't feel problematic to follow later steps**
 ```json
 {
     "allTrains": [
@@ -156,12 +156,10 @@ In `path`, first and last `PathStop` denotes source & destination stations respe
     ]
 }
 ```
-#### Performance :
-Result of running
+**`distanceFromSource` is in _`KiloMeter`_ w.r.t. Source Station & `duration` is in _`Second`_**
+#### Console Output :
 ```bash
 $ time node index.js
-```
-```bash
 success
 
 real	0m3.937s
@@ -178,7 +176,7 @@ sys	0m0.486s
 ```javascript
 parseJSONDataSet().then((data) => console.log(data), (err) => console.log(err));
 ```
-#### Example Output ::
+#### Console Output :
 ```bash
 $ time node index.js # make sure you've commented out proper portion of `index.js` to avoid execution of unnecessary code
 ```
@@ -221,7 +219,32 @@ parseJSONDataSet().then((data) =>
                             data.allTrains.forEach((elem) => console.log(elem)),
                         (err) => console.log(err));
 ```
-Well that not that much interesting :wink:
+### Finding all Stations and their Code to Name mapping :
+- If you want to check out what're stations present in Railway network _( along with Station Code to Station Name mapping )_, I got you covered
+```javascript
+parseJSONDataSet().then(
+    (data) => data.allStations.then((stations) => console.log(stations),
+                                    (err) => console.log(err)),
+    (err) => console.log(err));
+```
+#### Console Output :
+```bash
+$ time node index.js # make sure proper section(s) is/ are commented out
+{
+    ...
+  VDLR: 'MUMBAI VADAL',
+  BEPR: 'BELAPUR C.B.',
+  MNKD: 'MANKHURD',
+  CMBR: 'CHEMBUR',
+  NEU: 'NERUL' }
+
+real	0m1.353s
+user	0m1.355s
+sys	0m0.390s
+```
+- Well you can use this output to dump into a `JSON` file, for further usage
+- By the way we'll have `8148` stations in output, along with their code to name mapping
+- If you're interested in checking out implementation of `allStations` finder, take a look [here](https://github.com/itzmeanjan/indian-railway/blob/90f21958e2fbd01abeffd0bed6419857f5e3a034/model/data.js#L364)
 
 
 **_More to come ..._**
