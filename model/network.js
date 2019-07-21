@@ -1,5 +1,23 @@
 'use strict';
 
+// as we need to keep track of which train can take us from station A to B,
+// we may require to store an instance of all those trains which can be taken
+// for going to station B from current one
+//
+// so we store train id, which is generally one unique identifier string
+// and corresponding train name
+//
+// we'll keep track of all running trains in `Network`
+// by keeping a record of available trains from current `StationNode` to
+// neighbouring `StationNode`(s)
+
+class Train {
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+  }
+}
+
 // well what we're interested in doing here is,
 // representing whole railway network in form of Graph
 // where all stations will be considered as vertices of Graph
@@ -22,11 +40,12 @@
 // count
 
 class StationNode {
-  constructor(code, name, neighbouringStations, distances) {
+  constructor(code, name, neighbouringStations, distances, trains) {
     this.code = code;
     this.name = name;
     this.neighbouringStations = neighbouringStations;
     this.distances = distances;
+    this.trains = trains;
   }
 }
 
@@ -70,16 +89,28 @@ class Network {
   static fromTrainList(data) {
 
     function nodeHandler(index, node, wholeSet, network, innerElem,
-                         nodeState = 0) {
+                         connectingTrain, nodeState = 0) {
+      // nodeState value 0, denotes this node i.e. station in Railway Network is
+      // just created anything else will denotes, this node has already been
+      // added to network
       if (index === 0) {
         if (nodeState === 0)
           node.distances[wholeSet[index + 1].station.code] =
               Math.abs(wholeSet[index + 1].distanceFromSource -
                        innerElem.distanceFromSource);
-        else if (!(wholeSet[index + 1].station.code in node.distances))
-          node.distances[wholeSet[index + 1].station.code] =
-              Math.abs(wholeSet[index + 1].distanceFromSource -
-                       innerElem.distanceFromSource);
+        else {
+          if (!(wholeSet[index + 1].station.code in node.distances))
+            node.distances[wholeSet[index + 1].station.code] =
+                Math.abs(wholeSet[index + 1].distanceFromSource -
+                         innerElem.distanceFromSource);
+        }
+        if (!(wholeSet[index + 1].station.code in node.trains))
+          node.trains[wholeSet[index + 1].station.code] = [ connectingTrain ];
+        else {
+          if (!node.trains[wholeSet[index + 1].station.code].some(
+                  (elem) => elem.id === connectingTrain.id))
+            node.trains[wholeSet[index + 1].station.code].push(connectingTrain);
+        }
         let anotherInstance =
             network.findStationNodeByCode(wholeSet[index + 1].station.code);
         if (anotherInstance !== undefined && anotherInstance !== null) {
@@ -91,7 +122,7 @@ class Network {
         } else {
           anotherInstance =
               new StationNode(wholeSet[index + 1].station.code,
-                              wholeSet[index + 1].station.name, [], {});
+                              wholeSet[index + 1].station.name, [], {}, {});
           network.nodes.push(anotherInstance);
           node.neighbouringStations.push(anotherInstance);
         }
@@ -136,6 +167,13 @@ class Network {
             node.neighbouringStations.push(network.findStationNodeByCode(
                 wholeSet[index - 1].station.code));
         }
+        if (!(wholeSet[index + 1].station.code in node.trains))
+          node.trains[wholeSet[index + 1].station.code] = [ connectingTrain ];
+        else {
+          if (!node.trains[wholeSet[index + 1].station.code].some(
+                  (elem) => elem.id === connectingTrain.id))
+            node.trains[wholeSet[index + 1].station.code].push(connectingTrain);
+        }
         let anotherInstance =
             network.findStationNodeByCode(wholeSet[index + 1].station.code);
         if (anotherInstance !== undefined && anotherInstance !== null) {
@@ -147,7 +185,7 @@ class Network {
         } else {
           anotherInstance =
               new StationNode(wholeSet[index + 1].station.code,
-                              wholeSet[index + 1].station.name, [], {});
+                              wholeSet[index + 1].station.name, [], {}, {});
           network.nodes.push(anotherInstance);
           node.neighbouringStations.push(anotherInstance);
         }
@@ -156,16 +194,21 @@ class Network {
 
     let network = new Network([]);
     data.allTrains.forEach((elem) => {
+      let train = new Train(
+          elem.id,
+          elem.name); // we create instance of current `Train`, here and keep it
+                      // using for all intermediate stations it'll cover from
+                      // its source to destination ( including both of them )
       elem.path.stops.forEach((innerElem, idx, whole) => {
         let foundInstance =
             network.findStationNodeByCode(innerElem.station.code);
         if (foundInstance !== undefined && foundInstance !== null)
-          nodeHandler(idx, foundInstance, whole, network, innerElem, 1);
+          nodeHandler(idx, foundInstance, whole, network, innerElem, train, 1);
         else {
           let stationNode = new StationNode(innerElem.station.code,
-                                            innerElem.station.name, [], {});
+                                            innerElem.station.name, [], {}, {});
           network.nodes.push(stationNode);
-          nodeHandler(idx, stationNode, whole, network, innerElem);
+          nodeHandler(idx, stationNode, whole, network, innerElem, train);
         }
       });
     });

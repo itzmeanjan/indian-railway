@@ -56,6 +56,7 @@ parseJSONDataSet().then(
 
 
 parseJSONDataSet().then((data) => {
-  console.log(require('./model/network').fromTrainList(data));
+  let instance = require('./model/network').fromTrainList(data);
+  console.log(instance);
 }, (err) => console.log(err));
 
