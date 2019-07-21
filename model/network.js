@@ -18,6 +18,42 @@ class Train {
   }
 }
 
+// holds arrival and departure time at / from current station under
+// consideration and next station to come on its way to destination
+
+class TimeTable {
+  constructor(arrivalAtCurrent, departureFromCurrent, arrivalAtNext,
+              departureFromNext) {
+    this.arrivalAtCurrent = arrivalAtCurrent;
+    this.departureFromCurrent = departureFromCurrent;
+    this.arrivalAtNext = arrivalAtNext;
+    this.departureFromNext = departureFromNext;
+  }
+
+  // calculates time being spent in `Second(s)` at current station, which is
+  // under consideration
+
+  durationAtCurrent() {
+    return require('./time').getDifference(this.arrivalAtCurrent,
+                                           this.departureFromCurrent);
+  }
+
+  // calculates time to be spent in `Second(s)` at next station coming
+
+  durationAtNext() {
+    return require('./time').getDifference(this.arrivalAtNext,
+                                           this.departureFromNext);
+  }
+
+  // calculates time to be spent in `Second(s)` on track i.e. time required to
+  // cover distance from current station to next station ( stop )
+
+  durationOnTrack() {
+    return require('./time').getDifference(this.departureFromCurrent,
+                                           this.arrivalAtNext);
+  }
+}
+
 // well what we're interested in doing here is,
 // representing whole railway network in form of Graph
 // where all stations will be considered as vertices of Graph
@@ -38,14 +74,37 @@ class Train {
 // so one thing should be clear to you by now, elements present in
 // `neighbouringStations` & keys present in `distances` needs to be of same
 // count
+//
+// ** we've a new addition `trains`, which will hold a JS object, where keys
+// will be neighbouring station codes and their corresponding values will hold a
+// JS array, where each element will be an instance of `Train` class, holding
+// information regrading running train which can be taken for going to that
+// neighbouring station from current one ( under consideration )
+//
+// you may have already understood, why a JS array of `Train`(s) for a certain
+// station code, cause we can take different trains for getting to that
+// target station
+//
+// ** well we've another new addition in `StationNode` class, which is
+// `timeTable` now what does it do ?
+//
+// well it's supposed to hold a JS object, where keys will be neighbouring
+// station codes and values will be JS object(s), which will have unique train
+// id as keys and instance of `TimeTable` class as values
+//
+// what we plan to do is, to store arrival and departure time at/ from current
+// and next station for a certain train for a certain neighbour, which is why
+// keys were unique train id & neighbouring station codes repectively, using
+// `TimeTable` object
 
 class StationNode {
-  constructor(code, name, neighbouringStations, distances, trains) {
+  constructor(code, name, neighbouringStations, distances, trains, timeTable) {
     this.code = code;
     this.name = name;
     this.neighbouringStations = neighbouringStations;
     this.distances = distances;
     this.trains = trains;
+    this.timeTable = timeTable;
   }
 }
 
@@ -111,6 +170,15 @@ class Network {
                   (elem) => elem.id === connectingTrain.id))
             node.trains[wholeSet[index + 1].station.code].push(connectingTrain);
         }
+        if (!(wholeSet[index + 1].station.code in node.timeTable))
+          node.timeTable[wholeSet[index + 1].station.code] =
+              {}; // this is done simply to avoid one situation ;)
+        // holding timetable i.e. arrival and departure time, both at( from )
+        // current station and next station
+        node.timeTable[wholeSet[index + 1].station.code][connectingTrain.id] =
+            new TimeTable(innerElem.time.arrival, innerElem.time.departure,
+                          wholeSet[index + 1].time.arrival,
+                          wholeSet[index + 1].time.departure);
         let anotherInstance =
             network.findStationNodeByCode(wholeSet[index + 1].station.code);
         if (anotherInstance !== undefined && anotherInstance !== null) {
@@ -122,7 +190,7 @@ class Network {
         } else {
           anotherInstance =
               new StationNode(wholeSet[index + 1].station.code,
-                              wholeSet[index + 1].station.name, [], {}, {});
+                              wholeSet[index + 1].station.name, [], {}, {}, {});
           network.nodes.push(anotherInstance);
           node.neighbouringStations.push(anotherInstance);
         }
@@ -174,6 +242,14 @@ class Network {
                   (elem) => elem.id === connectingTrain.id))
             node.trains[wholeSet[index + 1].station.code].push(connectingTrain);
         }
+        if (!(wholeSet[index + 1].station.code in node.timeTable))
+          node.timeTable[wholeSet[index + 1].station.code] = {};
+        // holding timetable i.e. arrival and departure time, both at( from )
+        // current station and next station
+        node.timeTable[wholeSet[index + 1].station.code][connectingTrain.id] =
+            new TimeTable(innerElem.time.arrival, innerElem.time.departure,
+                          wholeSet[index + 1].time.arrival,
+                          wholeSet[index + 1].time.departure);
         let anotherInstance =
             network.findStationNodeByCode(wholeSet[index + 1].station.code);
         if (anotherInstance !== undefined && anotherInstance !== null) {
@@ -185,7 +261,7 @@ class Network {
         } else {
           anotherInstance =
               new StationNode(wholeSet[index + 1].station.code,
-                              wholeSet[index + 1].station.name, [], {}, {});
+                              wholeSet[index + 1].station.name, [], {}, {}, {});
           network.nodes.push(anotherInstance);
           node.neighbouringStations.push(anotherInstance);
         }
@@ -197,16 +273,16 @@ class Network {
       let train = new Train(
           elem.id,
           elem.name); // we create instance of current `Train`, here and keep it
-                      // using for all intermediate stations it'll cover from
-                      // its source to destination ( including both of them )
+      // using for all intermediate stations it'll cover from
+      // its source to destination ( including both of them )
       elem.path.stops.forEach((innerElem, idx, whole) => {
         let foundInstance =
             network.findStationNodeByCode(innerElem.station.code);
         if (foundInstance !== undefined && foundInstance !== null)
           nodeHandler(idx, foundInstance, whole, network, innerElem, train, 1);
         else {
-          let stationNode = new StationNode(innerElem.station.code,
-                                            innerElem.station.name, [], {}, {});
+          let stationNode = new StationNode(
+              innerElem.station.code, innerElem.station.name, [], {}, {}, {});
           network.nodes.push(stationNode);
           nodeHandler(idx, stationNode, whole, network, innerElem, train);
         }
