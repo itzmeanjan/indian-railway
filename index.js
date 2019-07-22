@@ -57,5 +57,5 @@ parseJSONDataSet().then(
 
 parseJSONDataSet().then((data) => {
   let instance = require('./model/network').fromTrainList(data);
-  console.log(instance.findStationNodeByCode('bhp'.toUpperCase()).trains.BWN);
+  console.log(instance.findDistanceBetweenStationNodes('bhp', 'rph'));
 }, (err) => console.log(err));

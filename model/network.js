@@ -23,7 +23,7 @@ class Train {
 
 class TimeTable {
   constructor(arrivalAtCurrent, departureFromCurrent, arrivalAtNext,
-              departureFromNext) {
+    departureFromNext) {
     this.arrivalAtCurrent = arrivalAtCurrent;
     this.departureFromCurrent = departureFromCurrent;
     this.arrivalAtNext = arrivalAtNext;
@@ -35,14 +35,14 @@ class TimeTable {
 
   durationAtCurrent() {
     return require('./time').getDifference(this.arrivalAtCurrent,
-                                           this.departureFromCurrent);
+      this.departureFromCurrent);
   }
 
   // calculates time to be spent in `Second(s)` at next station coming
 
   durationAtNext() {
     return require('./time').getDifference(this.arrivalAtNext,
-                                           this.departureFromNext);
+      this.departureFromNext);
   }
 
   // calculates time to be spent in `Second(s)` on track i.e. time required to
@@ -50,7 +50,7 @@ class TimeTable {
 
   durationOnTrack() {
     return require('./time').getDifference(this.departureFromCurrent,
-                                           this.arrivalAtNext);
+      this.arrivalAtNext);
   }
 }
 
@@ -124,6 +124,28 @@ class StationNode {
 class Network {
   constructor(nodes) { this.nodes = nodes; }
 
+  findDistanceBetweenStationNodes(codeForStationOne, codeForStationTwo) {
+    function findIt(node, target) {
+      let filtered = node.neighbouringStations.filter((elem) => elem.code === target);
+      if (filtered.length === 1)
+        return filtered[0];
+      return node.neighbouringStations.reduce((acc, cur) => {
+        console.log(cur);
+        if (cur.code === target)
+          acc.push(cur);
+        else
+          acc.push(findIt(cur, target));
+        return acc;
+      }, []);
+    }
+
+    let stationOne = this.findStationNodeByCode(codeForStationOne.toUpperCase());
+    let stationTwo = this.findStationNodeByCode(codeForStationTwo.toUpperCase());
+    if (!((stationOne !== undefined && stationOne !== null) && (stationTwo !== undefined && stationTwo !== null)))
+      return null;
+    findIt(stationOne, codeForStationTwo);
+  }
+
   // helps in finding an instance of a `StationNode` i.e. which is already
   // formed, by unique station code
   //
@@ -148,98 +170,98 @@ class Network {
   static fromTrainList(data) {
 
     function nodeHandler(index, node, wholeSet, network, innerElem,
-                         connectingTrain, nodeState = 0) {
+      connectingTrain, nodeState = 0) {
       // nodeState value 0, denotes this node i.e. station in Railway Network is
       // just created anything else will denotes, this node has already been
       // added to network
       if (index === 0) {
         if (nodeState === 0)
           node.distances[wholeSet[index + 1].station.code] =
-              Math.abs(wholeSet[index + 1].distanceFromSource -
-                       innerElem.distanceFromSource);
+            Math.abs(wholeSet[index + 1].distanceFromSource -
+              innerElem.distanceFromSource);
         else {
           if (!(wholeSet[index + 1].station.code in node.distances))
             node.distances[wholeSet[index + 1].station.code] =
-                Math.abs(wholeSet[index + 1].distanceFromSource -
-                         innerElem.distanceFromSource);
+              Math.abs(wholeSet[index + 1].distanceFromSource -
+                innerElem.distanceFromSource);
         }
         if (!(wholeSet[index + 1].station.code in node.trains))
-          node.trains[wholeSet[index + 1].station.code] = [ connectingTrain ];
+          node.trains[wholeSet[index + 1].station.code] = [connectingTrain];
         else {
           if (!node.trains[wholeSet[index + 1].station.code].some(
-                  (elem) => elem.id === connectingTrain.id))
+            (elem) => elem.id === connectingTrain.id))
             node.trains[wholeSet[index + 1].station.code].push(connectingTrain);
         }
         if (!(wholeSet[index + 1].station.code in node.timeTable))
           node.timeTable[wholeSet[index + 1].station.code] =
-              {}; // this is done simply to avoid one situation ;)
+            {}; // this is done simply to avoid one situation ;)
         // holding timetable i.e. arrival and departure time, both at( from )
         // current station and next station
         node.timeTable[wholeSet[index + 1].station.code][connectingTrain.id] =
-            new TimeTable(innerElem.time.arrival, innerElem.time.departure,
-                          wholeSet[index + 1].time.arrival,
-                          wholeSet[index + 1].time.departure);
+          new TimeTable(innerElem.time.arrival, innerElem.time.departure,
+            wholeSet[index + 1].time.arrival,
+            wholeSet[index + 1].time.departure);
         let anotherInstance =
-            network.findStationNodeByCode(wholeSet[index + 1].station.code);
+          network.findStationNodeByCode(wholeSet[index + 1].station.code);
         if (anotherInstance !== undefined && anotherInstance !== null) {
           if (nodeState === 0)
             node.neighbouringStations.push(anotherInstance);
           else if (!node.neighbouringStations.some(
-                       (elm) => elm.code === anotherInstance.code))
+            (elm) => elm.code === anotherInstance.code))
             node.neighbouringStations.push(anotherInstance);
         } else {
           anotherInstance =
-              new StationNode(wholeSet[index + 1].station.code,
-                              wholeSet[index + 1].station.name, [], {}, {}, {});
+            new StationNode(wholeSet[index + 1].station.code,
+              wholeSet[index + 1].station.name, [], {}, {}, {});
           network.nodes.push(anotherInstance);
           node.neighbouringStations.push(anotherInstance);
         }
       } else if (index === (wholeSet.length - 1)) {
         if (nodeState === 0) {
           node.distances[wholeSet[index - 1].station.code] =
-              Math.abs(innerElem.distanceFromSource -
-                       wholeSet[index - 1].distanceFromSource);
+            Math.abs(innerElem.distanceFromSource -
+              wholeSet[index - 1].distanceFromSource);
           node.neighbouringStations.push(
-              network.findStationNodeByCode(wholeSet[index - 1].station.code));
+            network.findStationNodeByCode(wholeSet[index - 1].station.code));
         } else {
           if (!(wholeSet[index - 1].station.code in node.distances))
             node.distances[wholeSet[index - 1].station.code] =
-                Math.abs(innerElem.distanceFromSource -
-                         wholeSet[index - 1].distanceFromSource);
+              Math.abs(innerElem.distanceFromSource -
+                wholeSet[index - 1].distanceFromSource);
           if (!node.neighbouringStations.some(
-                  (elm) => elm.code === wholeSet[index - 1].station.code))
+            (elm) => elm.code === wholeSet[index - 1].station.code))
             node.neighbouringStations.push(network.findStationNodeByCode(
-                wholeSet[index - 1].station.code));
+              wholeSet[index - 1].station.code));
         }
       } else {
         if (nodeState === 0) {
           node.distances[wholeSet[index - 1].station.code] =
-              Math.abs(innerElem.distanceFromSource -
-                       wholeSet[index - 1].distanceFromSource);
+            Math.abs(innerElem.distanceFromSource -
+              wholeSet[index - 1].distanceFromSource);
           node.distances[wholeSet[index + 1].station.code] =
-              Math.abs(wholeSet[index + 1].distanceFromSource -
-                       innerElem.distanceFromSource);
+            Math.abs(wholeSet[index + 1].distanceFromSource -
+              innerElem.distanceFromSource);
           node.neighbouringStations.push(
-              network.findStationNodeByCode(wholeSet[index - 1].station.code));
+            network.findStationNodeByCode(wholeSet[index - 1].station.code));
         } else {
           if (!(wholeSet[index - 1].station.code in node.distances))
             node.distances[wholeSet[index - 1].station.code] =
-                Math.abs(innerElem.distanceFromSource -
-                         wholeSet[index - 1].distanceFromSource);
+              Math.abs(innerElem.distanceFromSource -
+                wholeSet[index - 1].distanceFromSource);
           if (!(wholeSet[index + 1].station.code in node.distances))
             node.distances[wholeSet[index + 1].station.code] =
-                Math.abs(innerElem.distanceFromSource -
-                         wholeSet[index + 1].distanceFromSource);
+              Math.abs(innerElem.distanceFromSource -
+                wholeSet[index + 1].distanceFromSource);
           if (!node.neighbouringStations.some(
-                  (elm) => elm.code === wholeSet[index - 1].station.code))
+            (elm) => elm.code === wholeSet[index - 1].station.code))
             node.neighbouringStations.push(network.findStationNodeByCode(
-                wholeSet[index - 1].station.code));
+              wholeSet[index - 1].station.code));
         }
         if (!(wholeSet[index + 1].station.code in node.trains))
-          node.trains[wholeSet[index + 1].station.code] = [ connectingTrain ];
+          node.trains[wholeSet[index + 1].station.code] = [connectingTrain];
         else {
           if (!node.trains[wholeSet[index + 1].station.code].some(
-                  (elem) => elem.id === connectingTrain.id))
+            (elem) => elem.id === connectingTrain.id))
             node.trains[wholeSet[index + 1].station.code].push(connectingTrain);
         }
         if (!(wholeSet[index + 1].station.code in node.timeTable))
@@ -247,21 +269,21 @@ class Network {
         // holding timetable i.e. arrival and departure time, both at( from )
         // current station and next station
         node.timeTable[wholeSet[index + 1].station.code][connectingTrain.id] =
-            new TimeTable(innerElem.time.arrival, innerElem.time.departure,
-                          wholeSet[index + 1].time.arrival,
-                          wholeSet[index + 1].time.departure);
+          new TimeTable(innerElem.time.arrival, innerElem.time.departure,
+            wholeSet[index + 1].time.arrival,
+            wholeSet[index + 1].time.departure);
         let anotherInstance =
-            network.findStationNodeByCode(wholeSet[index + 1].station.code);
+          network.findStationNodeByCode(wholeSet[index + 1].station.code);
         if (anotherInstance !== undefined && anotherInstance !== null) {
           if (nodeState === 0)
             node.neighbouringStations.push(anotherInstance);
           else if (!node.neighbouringStations.some(
-                       (elm) => elm.code === anotherInstance.code))
+            (elm) => elm.code === anotherInstance.code))
             node.neighbouringStations.push(anotherInstance);
         } else {
           anotherInstance =
-              new StationNode(wholeSet[index + 1].station.code,
-                              wholeSet[index + 1].station.name, [], {}, {}, {});
+            new StationNode(wholeSet[index + 1].station.code,
+              wholeSet[index + 1].station.name, [], {}, {}, {});
           network.nodes.push(anotherInstance);
           node.neighbouringStations.push(anotherInstance);
         }
@@ -271,18 +293,18 @@ class Network {
     let network = new Network([]);
     data.allTrains.forEach((elem) => {
       let train = new Train(
-          elem.id,
-          elem.name); // we create instance of current `Train`, here and keep it
+        elem.id,
+        elem.name); // we create instance of current `Train`, here and keep it
       // using for all intermediate stations it'll cover from
       // its source to destination ( including both of them )
       elem.path.stops.forEach((innerElem, idx, whole) => {
         let foundInstance =
-            network.findStationNodeByCode(innerElem.station.code);
+          network.findStationNodeByCode(innerElem.station.code);
         if (foundInstance !== undefined && foundInstance !== null)
           nodeHandler(idx, foundInstance, whole, network, innerElem, train, 1);
         else {
           let stationNode = new StationNode(
-              innerElem.station.code, innerElem.station.name, [], {}, {}, {});
+            innerElem.station.code, innerElem.station.name, [], {}, {}, {});
           network.nodes.push(stationNode);
           nodeHandler(idx, stationNode, whole, network, innerElem, train);
         }
