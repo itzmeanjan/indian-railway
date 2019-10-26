@@ -22,10 +22,10 @@ except ImportError as e:
 
 
 class Timing(object):
-    def __init__(self, arrival: str, departure: str, station: Station, distance: int):
+    def __init__(self, stationCode: str, arrival: str, departure: str, distance: int):
+        self.stationCode = stationCode
         self.arrival = arrival
         self.departure = departure
-        self.station = station
         self.distance = distance
 
 
