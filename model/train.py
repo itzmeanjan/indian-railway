@@ -14,6 +14,19 @@ except ImportError as e:
     print('[!]Module Unavailable : {}'.format(str(e)))
     exit(1)
 
+'''
+    Holds all required information of a train,
+    which is running between source station & destination station.
+
+    Each train can be uniquely identified using its number,
+    well name of train is also kept
+
+    There's also one timeTable field in this object, which
+    lets us keep a record of how much time this train will
+    spend on each station over its route ( well there may be some
+    non-stopping stations, which will not be included in this record )
+'''
+
 
 class Train(object):
     def __init__(self, number: int, name: str, startAt: Station, endAt: Station, timeTable: List[TimeTable]):
@@ -24,21 +37,36 @@ class Train(object):
         self.timeTable = timeTable
 
 
-def __groupify__(data):
+'''
+    Helps us in groupifying all trains,
+    works as main backend worker function for function
+    lying below it
+'''
+
+
+def __groupify__(data: reader):
     holder = []
     lastItem = []
-    tmp = ()
+    tmp = []
     for i in data:
-        if not holder:
-            tmp += (i, )
+        if not lastItem:
+            tmp.append(i)
         else:
             if i[0] == lastItem[0]:
-                tmp += (i, )
+                tmp.append(i)
             else:
-                holder += tmp
-                tmp = (i, )
+                holder.append(tmp)
+                tmp = [i]
         lastItem = i
     return holder
+
+
+'''
+    Reads from Indian Railways TimeTable data ( *.csv file ),
+    which is then groupified into trains.
+
+    So finally this function returns a collection of Trains
+'''
 
 
 def importFromCSV(targetPath: str = join(dirname(__file__), '../data/Train_details_22122017.csv')):
