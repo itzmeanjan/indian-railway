@@ -23,14 +23,27 @@ except ImportError as e:
 
 
 def __buildTrain__(trainData: List[List[str]]) -> Train:
+    # this utility function will help in computing
+    # distance between stations present on this track
+    def __updateDistanceInBetweenStations__(timeTable: TimeTable) -> TimeTable:
+        currentDistance = 0
+        for i in timeTable.table:
+            if i.distance < 0:
+                break
+            i.distance -= currentDistance
+            currentDistance += i.distance
+        return timeTable
+
     return Train(
         trainData[0][0],
         trainData[0][1],
         Station(*trainData[0][8:10]),
         Station(*trainData[0][10:12]),
-        TimeTable(reduce(lambda acc, cur: acc +
-                         [Timing(*([cur[3]] + cur[5:8]))],
-                         trainData, [])))
+        __updateDistanceInBetweenStations__(
+            TimeTable(reduce(lambda acc, cur: acc +
+                             [Timing(
+                                 *([cur[3]] + cur[5:7] + [int(cur[7]) if cur[7].isnumeric() else -1]))],
+                             trainData, []))))
 
 
 '''
@@ -70,7 +83,8 @@ def importFromCSV(targetPath: str = join(dirname(__file__), 'data/Train_details_
     try:
         with open(targetPath, 'r') as fd:
             trains = __groupify__(reader(fd.readlines()[1:]))
-    except Exception:
+    except Exception as e:
+        print(e)
         trains = None
     finally:
         return trains
