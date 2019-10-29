@@ -1,11 +1,8 @@
 #!/usr/bin/python3
 
 from __future__ import annotations
-from sys import path
-from os.path import dirname
-path.append(dirname(__file__))
 try:
-    from station import Station
+    from station import StationNode
     from timetable import TimeTable
 except ImportError as e:
     print('[!]Module Unavailable : {}'.format(str(e)))
@@ -26,7 +23,7 @@ except ImportError as e:
 
 
 class Train(object):
-    def __init__(self, number: int, name: str, startAt: Station, endAt: Station, timeTable: TimeTable):
+    def __init__(self, number: int, name: str, startAt: StationNode, endAt: StationNode, timeTable: TimeTable):
         self.number = number
         self.name = name
         self.source = startAt

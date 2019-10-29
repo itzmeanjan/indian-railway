@@ -3,15 +3,34 @@
 from __future__ import annotations
 from csv import reader
 from os.path import join, dirname
-from typing import List
+from typing import List, Tuple
 from functools import reduce
 try:
     from model.train import Train
-    from station import Station
-    from timetable import TimeTable, Timing
+    from model.station import StationNode
+    from model.graph import RailGraph
+    from model.timetable import Timing, TimeTable
 except ImportError as e:
     print('[!]Module Unavailable : {}'.format(str(e)))
     exit(1)
+
+
+def __findStationNodeFromNeighbourElseBuild__(code: str, name: str, node: StationNode, rg: RailGraph) -> StationNode:
+    neighbour = node.getNeighbour(code)
+    if not neighbour:
+        neighbour = StationNode(code, name, [], [])
+        rg.nodes.append(neighbour)
+        node.neighbours.append(neighbour)
+    return neighbour
+
+
+def __buildStationNodeUnlessItExistsInGraph__(code: str, name: str, rg: RailGraph) -> StationNode:
+    node = rg.getNode(code)
+    if not node:
+        node = StationNode(code, name, [], [])
+        rg.nodes.append(node)
+    return node
+
 
 '''
     Creates an instance of Train class,
@@ -22,28 +41,20 @@ except ImportError as e:
 '''
 
 
-def __buildTrain__(trainData: List[List[str]]) -> Train:
-    # this utility function will help in computing
-    # distance between stations present on this track
-    def __updateDistanceInBetweenStations__(timeTable: TimeTable) -> TimeTable:
-        currentDistance = 0
-        for i in timeTable.table:
-            if i.distance < 0:
-                break
-            i.distance -= currentDistance
-            currentDistance += i.distance
-        return timeTable
-
+def __buildTrain__(trainData: List[List[str]], rg: RailGraph) -> Train:
+    timeTable = TimeTable([])
+    for i, j in enumerate(trainData):
+        node = __buildStationNodeUnlessItExistsInGraph__(*j[3:5], rg)
+        if i < (len(trainData) - 1):
+            __findStationNodeFromNeighbourElseBuild__(
+                *trainData[i+1][3:5], node, rg)
+        timeTable.table.append(Timing(node, *j[5:7], -1))
     return Train(
         trainData[0][0],
         trainData[0][1],
-        Station(*trainData[0][8:10]),
-        Station(*trainData[0][10:12]),
-        __updateDistanceInBetweenStations__(
-            TimeTable(reduce(lambda acc, cur: acc +
-                             [Timing(
-                                 *([cur[3]] + cur[5:7] + [int(cur[7]) if cur[7].isnumeric() else -1]))],
-                             trainData, []))))
+        rg.getNode(trainData[0][8]),
+        rg.getNode(trainData[0][10]),
+        timeTable)
 
 
 '''
@@ -53,7 +64,7 @@ def __buildTrain__(trainData: List[List[str]]) -> Train:
 '''
 
 
-def __groupify__(data: reader) -> List[Train]:
+def __groupify__(data: reader, rg: RailGraph) -> List[Train]:
     holder = []
     lastItem = []
     tmp = []
@@ -64,7 +75,7 @@ def __groupify__(data: reader) -> List[Train]:
             if i[0] == lastItem[0]:
                 tmp.append(i)
             else:
-                holder.append(__buildTrain__(tmp))
+                holder.append(__buildTrain__(tmp, rg))
                 tmp = [i]
         lastItem = i
     return holder
@@ -78,16 +89,18 @@ def __groupify__(data: reader) -> List[Train]:
 '''
 
 
-def importFromCSV(targetPath: str = join(dirname(__file__), 'data/Train_details_22122017.csv')) -> List[Train]:
-    trains = None
+def importFromCSV(targetPath: str = join(dirname(__file__), 'data/Train_details_22122017.csv')) -> Tuple[List[Train], RailGraph]:
+    trains = []
+    railGraph = RailGraph([])
     try:
         with open(targetPath, 'r') as fd:
-            trains = __groupify__(reader(fd.readlines()[1:]))
+            trains = __groupify__(reader(fd.readlines()[1:]), railGraph)
     except Exception as e:
         print(e)
         trains = None
+        railGraph = None
     finally:
-        return trains
+        return trains, railGraph
 
 
 if __name__ == '__main__':

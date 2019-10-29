@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import List
 try:
-    from station import Station
+    from station import StationNode
 except ImportError as e:
     print('[!]Module Unavailable : {}'.format(str(e)))
     exit(1)
@@ -22,8 +22,8 @@ except ImportError as e:
 
 
 class Timing(object):
-    def __init__(self, stationCode: str, arrival: str, departure: str, distance: int):
-        self.stationCode = stationCode
+    def __init__(self, stationNode: StationNode, arrival: str, departure: str, distance: int):
+        self.stationNode = stationNode
         self.arrival = arrival
         self.departure = departure
         self.distance = distance
