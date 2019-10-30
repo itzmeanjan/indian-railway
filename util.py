@@ -31,7 +31,6 @@ def __calculateDistance__(src: str, dst: str, distanceStr: str, distanceUpto: in
 def __buildStationNodeUnlessItExistsInGraph__(code: str, name: str, rg: RailGraph) -> StationNode:
     node = rg.getNode(code)
     if not node:
-        print('NiG')
         node = StationNode(code, name, [], [])
         rg.nodes.append(node)
     return node
@@ -73,7 +72,6 @@ def __buildTrain__(trainData: List[List[str]], rg: RailGraph) -> Train:
             src = node
         if i == (stopCount - 1):
             dst = node
-    print('Train : {}'.format(trainData[0][1]))
     return Train(
         trainData[0][0],
         trainData[0][1],
@@ -118,8 +116,7 @@ def importFromCSV(targetPath: str = join(dirname(__file__), 'data/Train_details_
     try:
         with open(targetPath, 'r') as fd:
             __groupify__(reader(fd.readlines()[1:]), railGraph, trains)
-    except Exception as e:
-        print(e)
+    except Exception:
         trains = None
         railGraph = None
     finally:
