@@ -32,7 +32,8 @@ def __buildStationNodeUnlessItExistsInGraph__(code: str, name: str, rg: RailGrap
     node = rg.getNode(code)
     if not node:
         node = StationNode(code, name, [], [])
-        rg.nodes.append(node)
+        rg.pushNode(node)
+        # rg.nodes.append(node)
     return node
 
 
@@ -40,8 +41,8 @@ def __findStationNodeFromNeighbourElseBuild__(code: str, name: str, distance: Di
     neighbour = node.getNeighbour(code)
     if not neighbour:
         neighbour = __buildStationNodeUnlessItExistsInGraph__(code, name, rg)
-        node.neighbours.append(neighbour)
-        node.distances.append(distance)
+        node.pushNode(neighbour)
+        node.pushDistance(distance)
     return neighbour
 
 
