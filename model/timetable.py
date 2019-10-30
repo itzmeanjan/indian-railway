@@ -22,11 +22,10 @@ except ImportError as e:
 
 
 class Timing(object):
-    def __init__(self, stationNode: StationNode, arrival: str, departure: str, distance: int):
+    def __init__(self, stationNode: StationNode, arrival: str, departure: str):
         self.stationNode = stationNode
         self.arrival = arrival
         self.departure = departure
-        self.distance = distance
 
     '''
         parses HH:MM:SS formatted arrival or departure time

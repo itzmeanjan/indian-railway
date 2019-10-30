@@ -10,26 +10,40 @@ try:
     from model.station import StationNode
     from model.graph import RailGraph
     from model.timetable import Timing, TimeTable
+    from distance import Distance
 except ImportError as e:
     print('[!]Module Unavailable : {}'.format(str(e)))
     exit(1)
 
 
-def __findStationNodeFromNeighbourElseBuild__(code: str, name: str, node: StationNode, rg: RailGraph) -> StationNode:
-    neighbour = node.getNeighbour(code)
-    if not neighbour:
-        neighbour = StationNode(code, name, [], [])
-        rg.nodes.append(neighbour)
-        node.neighbours.append(neighbour)
-    return neighbour
+def __calculateDistance__(src: str, dst: str, distanceStr: str, distanceUpto: int) -> int:
+    if distanceUpto == -1:
+        return distanceUpto, Distance(src, dst, distanceUpto)
+    else:
+        distance = -1
+        if distanceStr.isnumeric():
+            distance = int(distanceStr, base=10)
+            return distance, Distance(src, dst, distance - distanceUpto)
+        else:
+            return distance, Distance(src, dst, distance)
 
 
 def __buildStationNodeUnlessItExistsInGraph__(code: str, name: str, rg: RailGraph) -> StationNode:
     node = rg.getNode(code)
     if not node:
+        print('NiG')
         node = StationNode(code, name, [], [])
         rg.nodes.append(node)
     return node
+
+
+def __findStationNodeFromNeighbourElseBuild__(code: str, name: str, distance: Distance, node: StationNode, rg: RailGraph) -> StationNode:
+    neighbour = node.getNeighbour(code)
+    if not neighbour:
+        neighbour = __buildStationNodeUnlessItExistsInGraph__(code, name, rg)
+        node.neighbours.append(neighbour)
+        node.distances.append(distance)
+    return neighbour
 
 
 '''
@@ -43,17 +57,28 @@ def __buildStationNodeUnlessItExistsInGraph__(code: str, name: str, rg: RailGrap
 
 def __buildTrain__(trainData: List[List[str]], rg: RailGraph) -> Train:
     timeTable = TimeTable([])
+    stopCount = len(trainData)
+    src = None
+    dst = None
+    distanceUpto = 0
     for i, j in enumerate(trainData):
         node = __buildStationNodeUnlessItExistsInGraph__(*j[3:5], rg)
-        if i < (len(trainData) - 1):
+        if i < (stopCount - 1):
+            distanceUpto, dist = __calculateDistance__(
+                j[3], trainData[i+1][3], trainData[i+1][7], distanceUpto)
             __findStationNodeFromNeighbourElseBuild__(
-                *trainData[i+1][3:5], node, rg)
-        timeTable.table.append(Timing(node, *j[5:7], -1))
+                *trainData[i+1][3:5], dist, node, rg)
+        timeTable.table.append(Timing(node, *j[5:7]))
+        if i == 0:
+            src = node
+        if i == (stopCount - 1):
+            dst = node
+    print('Train : {}'.format(trainData[0][1]))
     return Train(
         trainData[0][0],
         trainData[0][1],
-        rg.getNode(trainData[0][8]),
-        rg.getNode(trainData[0][10]),
+        src,
+        dst,
         timeTable)
 
 
@@ -64,8 +89,7 @@ def __buildTrain__(trainData: List[List[str]], rg: RailGraph) -> Train:
 '''
 
 
-def __groupify__(data: reader, rg: RailGraph) -> List[Train]:
-    holder = []
+def __groupify__(data: reader, rg: RailGraph, trains: List[Train]):
     lastItem = []
     tmp = []
     for i in data:
@@ -75,10 +99,9 @@ def __groupify__(data: reader, rg: RailGraph) -> List[Train]:
             if i[0] == lastItem[0]:
                 tmp.append(i)
             else:
-                holder.append(__buildTrain__(tmp, rg))
+                trains.append(__buildTrain__(tmp, rg))
                 tmp = [i]
         lastItem = i
-    return holder
 
 
 '''
@@ -94,7 +117,7 @@ def importFromCSV(targetPath: str = join(dirname(__file__), 'data/Train_details_
     railGraph = RailGraph([])
     try:
         with open(targetPath, 'r') as fd:
-            trains = __groupify__(reader(fd.readlines()[1:]), railGraph)
+            __groupify__(reader(fd.readlines()[1:]), railGraph, trains)
     except Exception as e:
         print(e)
         trains = None
