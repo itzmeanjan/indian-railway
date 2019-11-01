@@ -114,14 +114,9 @@ def __groupify__(data: reader, rg: RailGraph, trains: List[Train]):
 def importFromCSV(targetPath: str = join(dirname(__file__), 'data/Train_details_22122017.csv')) -> Tuple[List[Train], RailGraph]:
     trains = []
     railGraph = RailGraph([])
-    try:
-        with open(targetPath, 'r') as fd:
-            __groupify__(reader(fd.readlines()[1:]), railGraph, trains)
-    except Exception:
-        trains = None
-        railGraph = None
-    finally:
-        return trains, railGraph
+    with open(targetPath, 'r') as fd:
+        __groupify__(reader(fd.readlines()[1:]), railGraph, trains)
+    return trains, railGraph
 
 
 if __name__ == '__main__':

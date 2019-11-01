@@ -28,7 +28,7 @@ except ImportError as e:
 class StationNode(object):
     def __init__(self, code: str, name: str,
                  neighbours: List[StationNode], distances: List[Distance]):
-        self.code = code
+        self.code = code.lower()
         self.name = name
         self.neighbours = neighbours
         self.distances = distances
@@ -40,15 +40,15 @@ class StationNode(object):
             return low if self.neighbours[low].code == code else -1
         else:
             mid = (low + high)//2
-            return self.__getNeighbour__(code, low, mid) if self.neighbours[mid].code >= code \
-                else self.__getNeighbour__(code, mid+1, high)
+            return self.__getNeighbourIndex__(code, low, mid) if self.neighbours[mid].code >= code \
+                else self.__getNeighbourIndex__(code, mid+1, high)
 
     def __getNeighbour__(self, code: str, low: int, high: int) -> StationNode:
         idx = self.__getNeighbourIndex__(code, low, high)
         return None if idx == -1 else self.neighbours[idx]
 
     def getNeighbour(self, code: str) -> StationNode:
-        return self.__getNeighbour__(code, 0, len(self.neighbours) - 1)
+        return self.__getNeighbour__(code.lower(), 0, len(self.neighbours) - 1)
 
     def __findProperPlace__(self, node: StationNode, low: int, high: int) -> int:
         if low > high:
@@ -73,6 +73,10 @@ class StationNode(object):
     def pushDistance(self, distance: Distance):
         self.distances.insert(self.__getNeighbourIndex__(
             distance.to, 0, len(self.neighbours) - 1), distance)
+
+    def getDistance(self, code: str) -> int:
+        return self.distances[self.__getNeighbourIndex__(
+            code.lower(), 0, len(self.neighbours) - 1)].value
 
 
 if __name__ == '__main__':
